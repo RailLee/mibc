@@ -1,0 +1,11 @@
+*
+!.gitignore
+!README.md
+!.github/
+!.github/**
+!notes/
+!notes/**
+!public/
+!public/**
+!scripts/
+!scripts/**

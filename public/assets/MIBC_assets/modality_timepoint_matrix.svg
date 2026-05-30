@@ -1,0 +1,123 @@
+<svg width="100%" viewBox="0 0 980 520" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>围术期各模态在 T0-T4 的采集节点矩阵</title>
+  <desc>矩阵展示 ctDNA 是 T0 到 T4 连续可采集的模态，病理和影像主要是关键节点快照，临床信息提供治疗上下文。</desc>
+  <defs>
+    <style>
+      .bg{fill:#fffdf9}
+      .title{font:700 24px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#211f1b}
+      .subtitle{font:400 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#6e6860}
+      .h{font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#4d4740}
+      .row-label{font:700 15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#26211d}
+      .sub{font:400 12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#6e6860}
+      .cell-main{font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#25221e}
+      .cell-note{font:400 12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#6f6961}
+      .dash{font:500 18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#aaa39b}
+      .insight{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#4d4740}
+      .em{font-weight:700;fill:#c94f28}
+      .grid{stroke:#ded8ce;stroke-width:1}
+      .head{fill:#f5f0e8}
+      .mol{fill:#faece7}
+      .path-main{fill:#eaf6f1}
+      .path-light{fill:#f3faf7}
+      .img-main{fill:#edf5fd}
+      .img-light{fill:#f6faff}
+      .clin{fill:#f1f0fb}
+      .none{fill:#fbfaf7}
+      .mol-bar{fill:#d85a30}
+      .path-bar{fill:#1d9e75}
+      .img-bar{fill:#378add}
+      .clin-bar{fill:#7f77dd}
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="980" height="520" rx="16"/>
+  <text class="title" x="32" y="42">模态 × 时间点矩阵</text>
+  <text class="subtitle" x="32" y="68">ctDNA 是贯穿 T0-T4 的连续模态，其他模态多是关键节点快照。</text>
+
+  <!-- Table geometry: x=32, y=96, row label=180, each time cell=148, header=48, row=72 -->
+  <rect class="head grid" x="32" y="96" width="920" height="48" rx="8"/>
+  <line class="grid" x1="212" y1="96" x2="212" y2="432"/>
+  <line class="grid" x1="360" y1="96" x2="360" y2="432"/>
+  <line class="grid" x1="508" y1="96" x2="508" y2="432"/>
+  <line class="grid" x1="656" y1="96" x2="656" y2="432"/>
+  <line class="grid" x1="804" y1="96" x2="804" y2="432"/>
+  <line class="grid" x1="952" y1="96" x2="952" y2="432"/>
+  <text class="h" x="122" y="126" text-anchor="middle">模态</text>
+  <text class="h" x="286" y="126" text-anchor="middle">T0 基线</text>
+  <text class="h" x="434" y="126" text-anchor="middle">T1 新辅助</text>
+  <text class="h" x="582" y="126" text-anchor="middle">T2 手术</text>
+  <text class="h" x="730" y="126" text-anchor="middle">T3 术后</text>
+  <text class="h" x="878" y="126" text-anchor="middle">T4 随访</text>
+
+  <!-- Row 1 -->
+  <rect class="mol grid" x="32" y="144" width="920" height="72"/>
+  <rect class="mol-bar" x="32" y="144" width="5" height="72"/>
+  <text class="row-label" x="52" y="176">分子模态</text>
+  <text class="sub" x="52" y="196">ctDNA · 甲基化</text>
+  <text class="cell-main" x="286" y="174" text-anchor="middle">基线 VAF</text>
+  <text class="cell-note" x="286" y="194" text-anchor="middle">甲基化 score</text>
+  <text class="cell-main" x="434" y="174" text-anchor="middle">动态变化</text>
+  <text class="cell-note" x="434" y="194" text-anchor="middle">疗效判断</text>
+  <text class="cell-main" x="582" y="174" text-anchor="middle">术后水平</text>
+  <text class="cell-note" x="582" y="194" text-anchor="middle">清除检测</text>
+  <text class="cell-main" x="730" y="174" text-anchor="middle">MRD 检测</text>
+  <text class="cell-note" x="730" y="194" text-anchor="middle">残留评估</text>
+  <text class="cell-main" x="878" y="174" text-anchor="middle">复发监测</text>
+  <text class="cell-note" x="878" y="194" text-anchor="middle">早期预警</text>
+
+  <!-- Row 2 -->
+  <rect class="path-light grid" x="32" y="216" width="920" height="72"/>
+  <rect class="path-bar" x="32" y="216" width="5" height="72"/>
+  <rect class="path-main" x="508" y="216" width="148" height="72"/>
+  <text class="row-label" x="52" y="248">病理模态</text>
+  <text class="sub" x="52" y="268">WSI 全切片</text>
+  <text class="cell-main" x="286" y="246" text-anchor="middle">TURBT 活检</text>
+  <text class="cell-note" x="286" y="266" text-anchor="middle">初始分级</text>
+  <text class="dash" x="434" y="260" text-anchor="middle">—</text>
+  <text class="cell-main" x="582" y="246" text-anchor="middle">手术标本</text>
+  <text class="cell-note" x="582" y="266" text-anchor="middle">pCR 判定</text>
+  <text class="dash" x="730" y="260" text-anchor="middle">—</text>
+  <text class="cell-main" x="878" y="246" text-anchor="middle">复发活检</text>
+  <text class="cell-note" x="878" y="266" text-anchor="middle">如有指征</text>
+
+  <!-- Row 3 -->
+  <rect class="img-light grid" x="32" y="288" width="920" height="72"/>
+  <rect class="img-bar" x="32" y="288" width="5" height="72"/>
+  <rect class="img-main" x="212" y="288" width="148" height="72"/>
+  <rect class="img-main" x="360" y="288" width="148" height="72"/>
+  <rect class="img-main" x="804" y="288" width="148" height="72"/>
+  <text class="row-label" x="52" y="320">影像模态</text>
+  <text class="sub" x="52" y="340">CT · MRI · 膀胱镜</text>
+  <text class="cell-main" x="286" y="318" text-anchor="middle">基线分期</text>
+  <text class="cell-note" x="286" y="338" text-anchor="middle">cT / cN</text>
+  <text class="cell-main" x="434" y="318" text-anchor="middle">疗效评估</text>
+  <text class="cell-note" x="434" y="338" text-anchor="middle">RECIST</text>
+  <text class="dash" x="582" y="332" text-anchor="middle">—</text>
+  <text class="cell-main" x="730" y="328" text-anchor="middle">术后基线</text>
+  <text class="cell-main" x="878" y="318" text-anchor="middle">影像随访</text>
+  <text class="cell-note" x="878" y="338" text-anchor="middle">复发筛查</text>
+
+  <!-- Row 4 -->
+  <rect class="clin grid" x="32" y="360" width="920" height="72"/>
+  <rect class="clin-bar" x="32" y="360" width="5" height="72"/>
+  <text class="row-label" x="52" y="392">临床模态</text>
+  <text class="sub" x="52" y="412">表格 + 文本</text>
+  <text class="cell-main" x="286" y="390" text-anchor="middle">患者特征</text>
+  <text class="cell-note" x="286" y="410" text-anchor="middle">年龄 · 分期</text>
+  <text class="cell-main" x="434" y="390" text-anchor="middle">治疗方案</text>
+  <text class="cell-note" x="434" y="410" text-anchor="middle">药物 · 周期</text>
+  <text class="cell-main" x="582" y="390" text-anchor="middle">手术记录</text>
+  <text class="cell-note" x="582" y="410" text-anchor="middle">术式 · 病理</text>
+  <text class="cell-main" x="730" y="390" text-anchor="middle">恢复评估</text>
+  <text class="cell-note" x="730" y="410" text-anchor="middle">并发症</text>
+  <text class="cell-main" x="878" y="390" text-anchor="middle">随访记录</text>
+  <text class="cell-note" x="878" y="410" text-anchor="middle">OS · RFS</text>
+
+  <!-- Insight box -->
+  <rect x="32" y="454" width="920" height="42" rx="8" fill="#fff3ee" stroke="#e2b5a2"/>
+  <rect x="32" y="454" width="5" height="42" rx="2" fill="#d85a30"/>
+  <text class="insight" x="50" y="481">
+    <tspan class="em">结论：</tspan>
+    <tspan>ctDNA 是连续时间轴；病理和影像多是关键节点快照。融合策略应按节点选择当时可用且互补的模态组合。</tspan>
+  </text>
+</svg>
