@@ -86,9 +86,15 @@ function renderObsidianImage(target, width) {
     return `<span class="missing-asset">缺失图片：${escapeHtml(target)}</span>`;
   }
   const numericWidth = width && /^\d+$/.test(width.trim()) ? Number(width.trim()) : null;
-  const style = numericWidth ? ` style="max-width:min(100%, ${numericWidth}px)"` : "";
+  const imageWidth = numericWidth ? Math.min(numericWidth, 620) : 560;
+  const style = ` style="--image-width:min(100%, ${imageWidth}px)"`;
   const alt = escapeHtml(path.basename(target));
-  return `<figure class="note-image"><img src="${src}" alt="${alt}" loading="lazy"${style}></figure>`;
+  return `<figure class="note-image"><a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${alt}" loading="lazy"${style}></a></figure>`;
+}
+
+function renderMath(content, display = false) {
+  const delimiter = display ? ["\\[", "\\]"] : ["\\(", "\\)"];
+  return `<span class="${display ? "math-display-inline" : "math"}">${delimiter[0]}${escapeHtml(content.trim())}${delimiter[1]}</span>`;
 }
 
 function renderInline(value) {
@@ -99,6 +105,18 @@ function renderInline(value) {
     return token;
   });
 
+  text = text.replace(/\$\$([^$\n]+)\$\$/g, (_, math) => {
+    const token = `@@INLINE_${placeholders.length}@@`;
+    placeholders.push(renderMath(math, true));
+    return token;
+  });
+
+  text = text.replace(/\$([^$\n]+)\$/g, (_, math) => {
+    const token = `@@INLINE_${placeholders.length}@@`;
+    placeholders.push(renderMath(math));
+    return token;
+  });
+
   text = escapeHtml(text);
 
   text = text.replace(/!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, target, width) =>
@@ -106,7 +124,6 @@ function renderInline(value) {
   );
   text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  text = text.replace(/\$([^$\n]+)\$/g, '<span class="math">\\($1\\)</span>');
 
   for (const [index, html] of placeholders.entries()) {
     text = text.replace(`@@INLINE_${index}@@`, html);
@@ -187,6 +204,13 @@ function renderMarkdown(source) {
       continue;
     }
 
+    const oneLineMath = trimmed.match(/^\$\$(.+)\$\$$/);
+    if (oneLineMath) {
+      html.push(`<div class="math-block">\\[${escapeHtml(oneLineMath[1].trim())}\\]</div>`);
+      index += 1;
+      continue;
+    }
+
     if (trimmed === "$$") {
       const math = [];
       index += 1;
@@ -196,6 +220,12 @@ function renderMarkdown(source) {
       }
       index += 1;
       html.push(`<div class="math-block">\\[${escapeHtml(math.join("\n"))}\\]</div>`);
+      continue;
+    }
+
+    if (/^!\[\[[^\]]+\]\]$/.test(trimmed)) {
+      html.push(renderInline(trimmed));
+      index += 1;
       continue;
     }
 
@@ -254,7 +284,11 @@ function renderMarkdown(source) {
       !/^(#{1,6})\s+/.test(lines[index]) &&
       !/^---+$/.test(lines[index].trim()) &&
       !lines[index].trim().startsWith("```") &&
+      !lines[index].trim().startsWith(">") &&
       lines[index].trim() !== "$$" &&
+      !/^\s*[-*]\s+/.test(lines[index]) &&
+      !/^\s*\d+\.\s+/.test(lines[index]) &&
+      !/^!\[\[[^\]]+\]\]$/.test(lines[index].trim()) &&
       !(lines[index].includes("|") && index + 1 < lines.length && isTableSeparator(lines[index + 1]))
     ) {
       paragraph.push(lines[index]);
@@ -317,6 +351,10 @@ const html = `<!doctype html>
       min-height: 100vh;
     }
 
+    .shell.toc-collapsed {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+
     aside {
       position: sticky;
       top: 0;
@@ -326,6 +364,16 @@ const html = `<!doctype html>
       border-right: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.82);
       backdrop-filter: blur(14px);
+      transition: opacity 160ms ease, transform 160ms ease, padding 160ms ease;
+    }
+
+    .shell.toc-collapsed aside {
+      opacity: 0;
+      overflow: hidden;
+      padding-left: 0;
+      padding-right: 0;
+      pointer-events: none;
+      transform: translateX(-16px);
     }
 
     .brand {
@@ -376,11 +424,19 @@ const html = `<!doctype html>
     }
 
     .toolbar {
+      position: sticky;
+      top: 12px;
+      z-index: 5;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin: 0 auto 18px;
       max-width: 980px;
+      padding: 6px;
+      border: 1px solid rgba(217, 224, 234, 0.72);
+      border-radius: 8px;
+      background: rgba(251, 250, 247, 0.84);
+      backdrop-filter: blur(12px);
       font-family: "Avenir Next", "Helvetica Neue", sans-serif;
     }
 
@@ -538,11 +594,18 @@ const html = `<!doctype html>
       text-align: center;
     }
 
+    .note-image a {
+      display: inline-block;
+    }
+
     .note-image img {
       height: auto;
+      max-width: var(--image-width, min(100%, 680px));
+      max-height: min(430px, 68vh);
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fff;
+      object-fit: contain;
       box-shadow: 0 10px 30px rgba(23, 32, 51, 0.08);
     }
 
@@ -564,6 +627,16 @@ const html = `<!doctype html>
       background: #f8fafc;
     }
 
+    .math-display-inline {
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+      margin: 12px 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
     @media (max-width: 860px) {
       .shell {
         display: block;
@@ -574,6 +647,10 @@ const html = `<!doctype html>
         height: auto;
         border-right: 0;
         border-bottom: 1px solid var(--line);
+      }
+
+      .shell.toc-collapsed aside {
+        display: none;
       }
 
       nav {
@@ -598,6 +675,7 @@ const html = `<!doctype html>
     </aside>
     <main>
       <div class="toolbar">
+        <button type="button" data-action="toggle-toc">收起目录</button>
         <button type="button" data-action="expand">展开全部</button>
         <button type="button" data-action="collapse">折叠全部</button>
       </div>
@@ -633,6 +711,13 @@ const html = `<!doctype html>
     }
 
     makeHeadingsCollapsible();
+
+    const shell = document.querySelector(".shell");
+    const tocButton = document.querySelector('[data-action="toggle-toc"]');
+    tocButton.addEventListener("click", () => {
+      const collapsed = shell.classList.toggle("toc-collapsed");
+      tocButton.textContent = collapsed ? "显示目录" : "收起目录";
+    });
 
     document.querySelector('[data-action="expand"]').addEventListener("click", () => {
       document.querySelectorAll("details").forEach((item) => { item.open = true; });

@@ -44,6 +44,10 @@
       min-height: 100vh;
     }
 
+    .shell.toc-collapsed {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+
     aside {
       position: sticky;
       top: 0;
@@ -53,6 +57,16 @@
       border-right: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.82);
       backdrop-filter: blur(14px);
+      transition: opacity 160ms ease, transform 160ms ease, padding 160ms ease;
+    }
+
+    .shell.toc-collapsed aside {
+      opacity: 0;
+      overflow: hidden;
+      padding-left: 0;
+      padding-right: 0;
+      pointer-events: none;
+      transform: translateX(-16px);
     }
 
     .brand {
@@ -103,11 +117,19 @@
     }
 
     .toolbar {
+      position: sticky;
+      top: 12px;
+      z-index: 5;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin: 0 auto 18px;
       max-width: 980px;
+      padding: 6px;
+      border: 1px solid rgba(217, 224, 234, 0.72);
+      border-radius: 8px;
+      background: rgba(251, 250, 247, 0.84);
+      backdrop-filter: blur(12px);
       font-family: "Avenir Next", "Helvetica Neue", sans-serif;
     }
 
@@ -265,11 +287,18 @@
       text-align: center;
     }
 
+    .note-image a {
+      display: inline-block;
+    }
+
     .note-image img {
       height: auto;
+      max-width: var(--image-width, min(100%, 680px));
+      max-height: min(430px, 68vh);
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fff;
+      object-fit: contain;
       box-shadow: 0 10px 30px rgba(23, 32, 51, 0.08);
     }
 
@@ -291,6 +320,16 @@
       background: #f8fafc;
     }
 
+    .math-display-inline {
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+      margin: 12px 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
     @media (max-width: 860px) {
       .shell {
         display: block;
@@ -301,6 +340,10 @@
         height: auto;
         border-right: 0;
         border-bottom: 1px solid var(--line);
+      }
+
+      .shell.toc-collapsed aside {
+        display: none;
       }
 
       nav {
@@ -353,6 +396,7 @@
     </aside>
     <main>
       <div class="toolbar">
+        <button type="button" data-action="toggle-toc">收起目录</button>
         <button type="button" data-action="expand">展开全部</button>
         <button type="button" data-action="collapse">折叠全部</button>
       </div>
@@ -360,12 +404,12 @@
         <h1 id="stage-1-项目本身">Stage 1： 项目本身</h1>
 <h2 id="一项目的背景与动机">一、项目的背景与动机</h2>
 <p>MIBC（muscle-invasive bladder cancer，肌层浸润性膀胱癌）是已经侵犯膀胱肌层的膀胱癌，侵袭性强、复发风险高、患者差异大。 目前常见治疗路径是 (下图中的第一行)</p>
-<p><figure class="note-image"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2005_12_40%20PM%201.png" alt="ChatGPT Image May 30, 2026, 05_12_40 PM 1.png" loading="lazy"></figure></p>
+<figure class="note-image"><a href="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2005_12_40%20PM%201.png" target="_blank" rel="noopener"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2005_12_40%20PM%201.png" alt="ChatGPT Image May 30, 2026, 05_12_40 PM 1.png" loading="lazy" style="--image-width:min(100%, 560px)"></a></figure>
 <h3 id="1-本项目要解决的临床问题">1. <strong>本项目要解决的临床问题</strong></h3>
-<p>**（一）、T1/T2：新辅助治疗疗效预测</p>
+<p><strong>（一）、T1/T2：新辅助治疗疗效预测</strong></p>
 <p>痛点在于：新辅助治疗后患者反应差异很大，医生很难在早期判断谁真正获益、谁可能耐药。</p>
 <p>预测的指标:  pCR / 病理缓解程度，即新辅助治疗响应，pCR、MPR、降期来评价。</p>
-<p>**（二）、T3/T4：术后 MRD 与复发风险预测</p>
+<p><strong>（二）、T3/T4：术后 MRD 与复发风险预测</strong></p>
 <p>痛点在于：术后是否仍存在 MRD（微小残留病灶）难以判断，传统复发风险监测依赖影像和随访，往往滞后，而单独看 ctDNA、单独看病理、或单独看临床信息都不够。</p>
 <p>对应需要预测的指标是 MRD / 复发风险，以及长期生存预后（OS / PFS），长期问题，回答的是“手术后未来癌症会不会回来”，常用 RFS、DFS、OS、MRD 状态来评价。</p>
 <h3 id="2-项目的核心切入点多源融合">2. <strong>项目的核心切入点：多源融合</strong></h3>
@@ -376,17 +420,24 @@
 <p>ctDNA 并非膀胱癌独有的标志物。肺癌、结直肠癌、乳腺癌、胃癌等实体瘤均可释放 ctDNA。MIBC 的特殊之处在于它属于尿路系统肿瘤，因此除血液 ctDNA 之外，尿液也是天然检测来源。尿液中的肿瘤来源 DNA，urine tumor DNA，简称 utDNA，有时能更直接反映膀胱局部肿瘤信号，与血液 ctDNA 形成互补的<strong>血液-尿液双通道监测体系</strong>。</p>
 <p>ctDNA 的核心价值在于<strong>动态特性</strong>。只要肿瘤细胞仍然存活并持续释放 DNA，<strong>ctDNA 的 VAF 或甲基化分数</strong>就可能随疾病状态改变而变化。因此，<strong>围术期 ctDNA</strong> 不是单次检测指标，而是用于追踪治疗反应、分子残留病灶和复发风险的<strong>时间序列信号</strong>。</p>
 <blockquote><p>图示：ctDNA 的血液 / 尿液双通道来源，以及围术期 T1–T4 的动态变化。</p></blockquote>
-<p><figure class="note-image"><img src="assets/MIBC_assets/ctDNA_dual_source_and_treatment_dynamics.svg" alt="ctDNA_dual_source_and_treatment_dynamics.svg" loading="lazy" style="max-width:min(100%, 697px)"></figure></p>
+<figure class="note-image"><a href="assets/MIBC_assets/ctDNA_dual_source_and_treatment_dynamics.svg" target="_blank" rel="noopener"><img src="assets/MIBC_assets/ctDNA_dual_source_and_treatment_dynamics.svg" alt="ctDNA_dual_source_and_treatment_dynamics.svg" loading="lazy" style="--image-width:min(100%, 620px)"></a></figure>
 <div class="table-wrap"><table><thead><tr><th>时间点</th><th>临床阶段</th><th>ctDNA 主要含义</th><th>临床解读</th><th>可能决策</th></tr></thead><tbody><tr><td>T0</td><td>治疗前</td><td>基线阳性/阴性、VAF、甲基化评分</td><td>反映初始肿瘤负荷与分子特征</td><td>建立基线，辅助风险分层</td></tr>
 <tr><td>T1</td><td>新辅助治疗中</td><td>VAF 或甲基化分数是否下降</td><td>下降提示治疗可能有效；未下降提示潜在耐药</td><td>继续当前方案或评估调整治疗</td></tr>
 <tr><td>T2</td><td>手术前</td><td>是否清除或转阴</td><td>转阴提示 pCR/MPR 可能性增加</td><td>评估新辅助治疗效果，辅助手术前判断</td></tr>
 <tr><td>T3</td><td>术后</td><td>是否仍然阳性</td><td>阳性提示可能存在 MRD</td><td>考虑辅助治疗或加密监测</td></tr>
 <tr><td>T4</td><td>术后随访</td><td>是否重新升高或反弹</td><td>重新升高提示复发风险</td><td>触发影像复查，调整随访或治疗</td></tr></tbody></table></div>
-<p><strong>关键术语</strong> - <strong>肿瘤负荷</strong>：体内肿瘤的总体量，包括大小、范围和生物学活跃程度。负荷越高，ctDNA 信号往往越强。 - <strong>VAF，variant allele frequency</strong>：突变等位基因频率，用于衡量突变信号在测序 reads 中的占比。 - <strong>甲基化分数</strong>：肿瘤相关甲基化位点的综合信号，可作为突变检测之外的分子特征。 - <strong>ctDNA 清除 / 反弹</strong>：治疗后 ctDNA 从阳性转阴称为清除；随访中从低水平重新升高称为反弹。 - <strong>pCR，pathologic complete response</strong>：病理完全缓解。 - <strong>MPR，major pathological response</strong>：主要病理缓解。 - <strong>MRD，minimal residual disease</strong>：微小残留病灶。</p>
+<p><strong>关键术语</strong></p>
+<ul><li><strong>肿瘤负荷</strong>：体内肿瘤的总体量，包括大小、范围和生物学活跃程度。负荷越高，ctDNA 信号往往越强。</li>
+<li><strong>VAF，variant allele frequency</strong>：突变等位基因频率，用于衡量突变信号在测序 reads 中的占比。</li>
+<li><strong>甲基化分数</strong>：肿瘤相关甲基化位点的综合信号，可作为突变检测之外的分子特征。</li>
+<li><strong>ctDNA 清除 / 反弹</strong>：治疗后 ctDNA 从阳性转阴称为清除；随访中从低水平重新升高称为反弹。</li>
+<li><strong>pCR，pathologic complete response</strong>：病理完全缓解。</li>
+<li><strong>MPR，major pathological response</strong>：主要病理缓解。</li>
+<li><strong>MRD，minimal residual disease</strong>：微小残留病灶。</li></ul>
 <h3 id="22-ctdna-检测变异-or-甲基化">2.2 ctDNA 检测：变异 or 甲基化</h3>
-<p><figure class="note-image"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_13%20PM%20(1).png" alt="ChatGPT Image May 30, 2026, 10_35_13 PM (1).png" loading="lazy"></figure></p>
-<p><figure class="note-image"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_15%20PM%20(2).png" alt="ChatGPT Image May 30, 2026, 10_35_15 PM (2).png" loading="lazy"></figure></p>
-<p><figure class="note-image"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_16%20PM%20(3).png" alt="ChatGPT Image May 30, 2026, 10_35_16 PM (3).png" loading="lazy"></figure></p>
+<figure class="note-image"><a href="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_13%20PM%20(1).png" target="_blank" rel="noopener"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_13%20PM%20(1).png" alt="ChatGPT Image May 30, 2026, 10_35_13 PM (1).png" loading="lazy" style="--image-width:min(100%, 560px)"></a></figure>
+<figure class="note-image"><a href="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_15%20PM%20(2).png" target="_blank" rel="noopener"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_15%20PM%20(2).png" alt="ChatGPT Image May 30, 2026, 10_35_15 PM (2).png" loading="lazy" style="--image-width:min(100%, 560px)"></a></figure>
+<figure class="note-image"><a href="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_16%20PM%20(3).png" target="_blank" rel="noopener"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2010_35_16%20PM%20(3).png" alt="ChatGPT Image May 30, 2026, 10_35_16 PM (3).png" loading="lazy" style="--image-width:min(100%, 560px)"></a></figure>
 <h4 id="221-动态监测到底监测什么">2.2.1 “动态监测”到底监测什么</h4>
 <p>动态 <strong>时间轴</strong>上的</p>
 <div class="math-block">\[\text{ctDNA 变异信号和甲基化信号的时间序列变化}\]</div>
@@ -412,15 +463,23 @@
 <li><strong>时间点</strong>：before NAC（新辅助化疗），during NAC，after NAC，可映射成 T0、T1、T2。</li>
 <li><strong>样本来源</strong>：plasma 是血浆；UP 是 urine pellet，尿沉渣；US 是 urine supernatant，尿上清。液体样本类型。</li>
 <li><strong>分子特征</strong>：methylation positive / negative、methylation score、DMR 位点信号、CpG panel score。</li></ul>
-<p>(2) <strong>病理模态</strong>：本研究的 AI 病理输入来自 TURBT 标本或根治性膀胱切除标本的 whole slide image（WSI，全切片数字图像）。由于 WSI 分辨率极高，无法整张直接输入模型，通常需切分为大量 patch（小图块）后分析；而逐 patch 标注成本高，临床研究往往只有患者级标签，“患癌”或“正常”。因此，该任务通常被建模为 weakly supervised learning（弱监督学习），并采用 multiple instance learning（MIL，多实例学习） 。 &gt; 图示：patch 特征到 patient-level 向量的 MIL 聚合流程：将一张 WSI 视为一个 bag（包），每个 patch 视为一个 instance（实例）。每个 patch 先经 CNN（卷积神经网络）、ViT（Vision Transformer，视觉 Transformer）或 pathology foundation model（病理基础模型）提取 patch-level feature（图块级数字特征），再通过 average pooling、max pooling、attention pooling、CLAM 或 TransMIL 等机制聚合为 patient-level feature（患者级病理特征），用于后续疗效或预后预测。</p>
-<p><figure class="note-image"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2011_25_47%20PM.png" alt="ChatGPT Image May 30, 2026, 11_25_47 PM.png" loading="lazy" style="max-width:min(100%, 697px)"></figure></p>
-<p>（3）<strong>影像 / 内镜模态</strong>：来自 CT、MRI、膀胱镜图像和内镜视频帧，可分成三类输入。 - 第一类是原始视觉数据，例如 CT/MRI 图像、膀胱镜图像和视频帧，可由 CNN、ViT 或 radiomics 方法提取影像特征。 - 第二类是影像报告文本，例如“膀胱壁增厚”“最大径 3.2 cm”“盆腔淋巴结增大”“未见远处转移”等医生描述。 - 第三类是从图像或报告中整理出的结构化指标，例如 RECIST 反应、肿瘤大小、淋巴结阳性/阴性和临床分期。 - 参考上，<strong>ZL018 MuMo 图 2</strong> 展示了 CT 图像和影像报告如何进入多模态模型；</p>
-<p>（4）<strong>临床模态</strong>：主要包括结构化临床变量和报告文本。 - 结构化变量包括年龄、性别、ECOG、临床分期、治疗方案、新辅助治疗类型、疗程数和是否完成治疗。 - 报告文本指医生写出的自然语言记录，例如病理报告、影像报告和病历记录；第一版建模时不一定直接使用大语言模型处理文本，可以先从文本中抽取关键字段，例如 ypT、ypN、LVI、病理亚型、疗程完成度等 - 参考上，<strong>ZL018 MuMo 图 2</strong> 使用 patient information fusion 整合患者信息，并同时利用影像报告和病理报告。</p>
-<p><figure class="note-image"><img src="assets/MIBC_assets/multimodal_pipeline_innovation_map.svg" alt="multimodal_pipeline_innovation_map.svg" loading="lazy" style="max-width:min(100%, 697px)"></figure></p>
+<p>(2) <strong>病理模态</strong>：本研究的 AI 病理输入来自 TURBT 标本或根治性膀胱切除标本的 whole slide image（WSI，全切片数字图像）。由于 WSI 分辨率极高，无法整张直接输入模型，通常需切分为大量 patch（小图块）后分析；而逐 patch 标注成本高，临床研究往往只有患者级标签，“患癌”或“正常”。因此，该任务通常被建模为 weakly supervised learning（弱监督学习），并采用 multiple instance learning（MIL，多实例学习） 。</p>
+<blockquote><p>图示：patch 特征到 patient-level 向量的 MIL 聚合流程：将一张 WSI 视为一个 bag（包），每个 patch 视为一个 instance（实例）。每个 patch 先经 CNN（卷积神经网络）、ViT（Vision Transformer，视觉 Transformer）或 pathology foundation model（病理基础模型）提取 patch-level feature（图块级数字特征），再通过 average pooling、max pooling、attention pooling、CLAM 或 TransMIL 等机制聚合为 patient-level feature（患者级病理特征），用于后续疗效或预后预测。</p></blockquote>
+<figure class="note-image"><a href="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2011_25_47%20PM.png" target="_blank" rel="noopener"><img src="assets/ChatGPT%20Image%20May%2030%2C%202026%2C%2011_25_47%20PM.png" alt="ChatGPT Image May 30, 2026, 11_25_47 PM.png" loading="lazy" style="--image-width:min(100%, 620px)"></a></figure>
+<p>（3）<strong>影像 / 内镜模态</strong>：来自 CT、MRI、膀胱镜图像和内镜视频帧，可分成三类输入。</p>
+<ul><li>第一类是原始视觉数据，例如 CT/MRI 图像、膀胱镜图像和视频帧，可由 CNN、ViT 或 radiomics 方法提取影像特征。</li>
+<li>第二类是影像报告文本，例如“膀胱壁增厚”“最大径 3.2 cm”“盆腔淋巴结增大”“未见远处转移”等医生描述。</li>
+<li>第三类是从图像或报告中整理出的结构化指标，例如 RECIST 反应、肿瘤大小、淋巴结阳性/阴性和临床分期。</li>
+<li>参考上，<strong>ZL018 MuMo 图 2</strong> 展示了 CT 图像和影像报告如何进入多模态模型；</li></ul>
+<p>（4）<strong>临床模态</strong>：主要包括结构化临床变量和报告文本。</p>
+<ul><li>结构化变量包括年龄、性别、ECOG、临床分期、治疗方案、新辅助治疗类型、疗程数和是否完成治疗。</li>
+<li>报告文本指医生写出的自然语言记录，例如病理报告、影像报告和病历记录；第一版建模时不一定直接使用大语言模型处理文本，可以先从文本中抽取关键字段，例如 ypT、ypN、LVI、病理亚型、疗程完成度等</li>
+<li>参考上，<strong>ZL018 MuMo 图 2</strong> 使用 patient information fusion 整合患者信息，并同时利用影像报告和病理报告。</li></ul>
+<figure class="note-image"><a href="assets/MIBC_assets/multimodal_pipeline_innovation_map.svg" target="_blank" rel="noopener"><img src="assets/MIBC_assets/multimodal_pipeline_innovation_map.svg" alt="multimodal_pipeline_innovation_map.svg" loading="lazy" style="--image-width:min(100%, 620px)"></a></figure>
 <h4 id="232-输入标签输出与评价指标">2.3.2 输入、标签、输出与评价指标</h4>
 <blockquote><p><strong>对一个 MIBC 患者，AI 到底看什么、预测什么、用什么真实答案检查自己？</strong></p></blockquote>
 <p>机器学习里，一个患者可以看成一个样本。模型读取患者的输入信息 <span class="math">\(X_i\)</span>，给出预测结果 <span class="math">\(\hat{y}_i=f_\theta(X_i)\)</span>，再用真实标签 <span class="math">\(y_i\)</span> 检查预测是否可靠。其中，<span class="math">\(i\)</span> 表示第 <span class="math">\(i\)</span> 个患者，<span class="math">\(f_\theta\)</span> 表示模型，<span class="math">\(y_i\)</span> 表示 ground truth 标签，对于多模态数据：</p>
-<p>$<span class="math">\(\text{原始数据→对应模态编码器 encoder→embedding→多模态融合→预测 pCR/RFS/复发风险}\)</span>$</p>
+<div class="math-block">\[\text{原始数据→对应模态编码器 encoder→embedding→多模态融合→预测 pCR/RFS/复发风险}\]</div>
 <div class="table-wrap"><table><thead><tr><th>对象</th><th>中文含义</th><th>本项目中的例子</th><th>作用</th></tr></thead><tbody><tr><td><span class="math">\(X_i\)</span></td><td>输入特征</td><td>ctDNA、WSI、CT、膀胱镜、临床信息</td><td>模型预测前能看到的信息</td></tr>
 <tr><td><span class="math">\(y_i\)</span></td><td>真实标签</td><td>pCR、MPR、MRD、RFS、DFS、OS</td><td>训练和评估模型的真实答案</td></tr>
 <tr><td><span class="math">\(\hat{y}_i\)</span></td><td>模型输出</td><td>pCR 概率、MPR 概率、MRD 阳性风险、复发风险分数</td><td>模型给医生的预测结果</td></tr>
@@ -501,7 +560,7 @@
 <li><strong>病理切片（WSI）</strong>：只能拿到两个关键时间点的样本 —— 最开始确诊时做的膀胱镜活检（T0），和后来做手术切下来的肿瘤标本（T2）。</li>
 <li><strong>CT/MRI 影像和膀胱镜检查</strong>：不是随时都做，只在需要判断癌症分期、评估治疗有没有效果，或者怀疑癌症复发的时候才会做。</li>
 <li><strong>病历里的临床信息</strong>：记录了每个关键时间点用了什么治疗，以及病人最终的治疗结果。</li></ul>
-<p><figure class="note-image"><img src="assets/MIBC_assets/modality_timepoint_matrix.svg" alt="modality_timepoint_matrix.svg" loading="lazy" style="max-width:min(100%, 697px)"></figure></p>
+<figure class="note-image"><a href="assets/MIBC_assets/modality_timepoint_matrix.svg" target="_blank" rel="noopener"><img src="assets/MIBC_assets/modality_timepoint_matrix.svg" alt="modality_timepoint_matrix.svg" loading="lazy" style="--image-width:min(100%, 620px)"></a></figure>
 <p>所以是不是融合策略应当是<strong>节点自适应融合</strong>：每个临床决策节点只使用当时可获得、可信且互补的子集，避免机械要求所有时间点都有所有模态？</p>
 <h1 id="stage-2-项目书">Stage 2:  项目书</h1>
 <div class="table-wrap"><table><thead><tr><th>课题</th><th>修改后题目</th><th>核心逻辑</th></tr></thead><tbody><tr><td>课题 1：检测</td><td><strong>高维稀疏 ctDNA 甲基化信号识别与检测 panel 优化</strong></td><td>测得准、测得便宜</td></tr>
@@ -542,11 +601,20 @@
 <hr>
 <p>2.4 多模态建模</p>
 <blockquote><p>在 MIBC 围术期场景中，如何把 ctDNA 动态监测、WSI 病理图像、临床信息和文本报告融合起来，构建一个既能预测新辅助疗效，又能预测术后复发风险的可解释模型？</p></blockquote>
-<p>hctDNA=fctDNA(xctDNA)h_{ctDNA}=f_{ctDNA}(x_{ctDNA})hctDNA​=fctDNA​(xctDNA​) hWSI=fWSI(xWSI)h_{WSI}=f_{WSI}(x_{WSI})hWSI​=fWSI​(xWSI​) hclinical=fclinical(xclinical)h_{clinical}=f_{clinical}(x_{clinical})hclinical​=fclinical​(xclinical​) htext=ftext(xtext)h_{text}=f_{text}(x_{text})htext​=ftext​(xtext​)</p>
+<div class="math-block">\[h_{\mathrm{ctDNA}} = f_{\mathrm{ctDNA}}(x_{\mathrm{ctDNA}}), \quad
+h_{\mathrm{WSI}} = f_{\mathrm{WSI}}(x_{\mathrm{WSI}}), \quad
+h_{\mathrm{clinical}} = f_{\mathrm{clinical}}(x_{\mathrm{clinical}}), \quad
+h_{\mathrm{text}} = f_{\mathrm{text}}(x_{\mathrm{text}})\]</div>
 <p>然后融合：</p>
-<p>hfusion=Fusion(hctDNA,hWSI,hclinical,htext)h_{fusion}=Fusion(h_{ctDNA}, h_{WSI}, h_{clinical}, h_{text})hfusion​=Fusion(hctDNA​,hWSI​,hclinical​,htext​)</p>
+<div class="math-block">\[h_{\mathrm{fusion}} =
+\mathrm{Fusion}\left(
+h_{\mathrm{ctDNA}},
+h_{\mathrm{WSI}},
+h_{\mathrm{clinical}},
+h_{\mathrm{text}}
+\right)\]</div>
 <p>最后预测：</p>
-<p>y^=g(hfusion)\hat{y}=g(h_{fusion})y^​=g(hfusion​)</p>
+<div class="math-block">\[\hat{y} = g(h_{\mathrm{fusion}})\]</div>
 <p>这里：</p>
 <ul><li>fctDNAf_{ctDNA}fctDNA​：ctDNA 编码器；</li>
 <li>fWSIf_{WSI}fWSI​：病理图像编码器；</li>
@@ -638,6 +706,13 @@
     }
 
     makeHeadingsCollapsible();
+
+    const shell = document.querySelector(".shell");
+    const tocButton = document.querySelector('[data-action="toggle-toc"]');
+    tocButton.addEventListener("click", () => {
+      const collapsed = shell.classList.toggle("toc-collapsed");
+      tocButton.textContent = collapsed ? "显示目录" : "收起目录";
+    });
 
     document.querySelector('[data-action="expand"]').addEventListener("click", () => {
       document.querySelectorAll("details").forEach((item) => { item.open = true; });
