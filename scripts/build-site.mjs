@@ -692,7 +692,7 @@ const html = `<!doctype html>
         const heading = headings[index];
         const level = Number(heading.tagName.slice(1));
         const details = document.createElement("details");
-        details.open = level <= 2;
+        details.open = true;
         const summary = document.createElement("summary");
         summary.appendChild(heading.cloneNode(true));
         details.appendChild(summary);
