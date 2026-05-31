@@ -1,4 +1,4 @@
-<svg width="100%" viewBox="0 0 680 440" role="img" style="" xmlns="http://www.w3.org/2000/svg">
+<svg width="680" height="440" viewBox="0 0 680 440" role="img" style="" xmlns="http://www.w3.org/2000/svg">
 <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">多模态 MIBC pipeline 技术创新地图</title>
 <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">四大模态从原始数据经特征编码到融合与预测的完整流水线，用颜色标注各环节的论文创新密度：珊瑚色为高创新区，青色为新兴方向，灰色为标准方法</desc>
 <defs>

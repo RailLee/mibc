@@ -1,4 +1,4 @@
-<svg width="100%" viewBox="0 0 980 520" role="img" xmlns="http://www.w3.org/2000/svg">
+<svg width="980" height="520" viewBox="0 0 980 520" role="img" xmlns="http://www.w3.org/2000/svg">
   <title>围术期各模态在 T0-T4 的采集节点矩阵</title>
   <desc>矩阵展示 ctDNA 是 T0 到 T4 连续可采集的模态，病理和影像主要是关键节点快照，临床信息提供治疗上下文。</desc>
   <defs>
