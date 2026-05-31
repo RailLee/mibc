@@ -165,7 +165,7 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 | 膀胱镜图像          | CNN、YOLO、U-Net、PSPNet、ViT                            | endoscopy embedding                    |
 | 病理报告、影像报告、病历文本 | BERT、ClinicalBERT、Chinese medical BERT、LLM embedding | text embedding                         |
 | 年龄、分期、治疗方案     | logistic/Cox、XGBoost、LightGBM、TabNet、TabTransformer  | tabular feature                        |
-##### 3. 标签 $y_i$：真实临床结局是什么
+##### 3. 标签 $y_i$
 
 标签是模型要学习的真实答案。医学 AI 里，标签通常来自病理结果、分子检测结果或长期随访。
 
@@ -179,17 +179,7 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 | **DFS** | disease-free survival，无病生存期 | 随访记录 | 生存分析任务 | 患者多久没有复发、进展或死亡 |
 | **OS** | overall survival，总生存期 | 生存随访 | 生存分析任务 | 患者总体生存时间 |
 
-这些标签在本项目里可以分成三组：
-
-| 标签组    | 包含哪些标签            | 临床含义               |
-| ------ | ----------------- | ------------------ |
-| 短期疗效标签 | pCR、MPR、ypT / TRG | 新辅助治疗后肿瘤退缩到什么程度    |
-| 分子残留标签 | MRD               | 手术后是否还有分子层面的残留肿瘤信号 |
-| 长期结局标签 | RFS、DFS、OS        | 后续是否复发、多久复发、总体生存多久 |
-
-##### 4. 输出 $\hat{y}_i$：模型最后给医生什么
-
-模型输出是预测值。它不是现实中已经发生的真实结局，而是模型根据输入给出的估计。
+##### 4. 输出 $\hat{y}_i$：模型最后给医生的预测值
 
 | 任务 | 标签 $y_i$ | 模型输出 $\hat{y}_i$ | 输出怎么理解 |
 | --- | --- | --- | --- |
@@ -254,7 +244,7 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 | 输出   | 模型最后给出分类标签、预测概率、risk score，还是生存曲线                                                    |
 | 评价指标 | 分类任务看 AUC、F1、sensitivity、specificity；生存任务看 C-index、KM 曲线、log-rank、time-dependent AUC |
 
-已有文献中的例子：
+已有文献中的例子：（这个地方是不是加上参考文献 第几章到底，最具体的那个例子？）
 
 - **ZL018 MuMo**：输入包括 WSI、CT、报告和临床信息；输出治疗反应风险分数，并用 PFS / OS 分层验证。
 - **ZL008 DAM**：输入是动态液体活检特征；输出 responder / non-responder。
@@ -263,7 +253,7 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 - **我们项目**：重点应输出 **pCR / MPR 概率 + MRD 风险分层 + RFS / 复发风险**。
 
 
-#### 2.3.3 是否动态数据价值更高？
+#### 2.3.3 为什么 ctDNA 这种动态数据更适合作为纵向核心信号？
 
 要解决这个问题，核心是看每种检查数据能不能**跟着时间一直连续拿到**。
 
@@ -274,9 +264,6 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 
 ![[MIBC_assets/modality_timepoint_matrix.svg|697]]
 
-所以是不是融合策略应当是**节点自适应融合**：每个临床决策节点只使用当时可获得、可信且互补的子集，避免机械要求所有时间点都有所有模态？
-
-
 
 # Stage 2:  项目书
 
@@ -286,12 +273,65 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 | 课题 2：预测 | **融合 ctDNA 动态与 AI 病理的疗效响应和复发风险预测模型** | 看懂信号、预测准  |
 | 课题 3：决策 | **基于 ctDNA 动态风险分层的围术期精准治疗与随访决策优化**   | 用好信号、辅助决策 |
 |         |                                      |           |
-## 一、核心难点
+## 一、研究课题：多模态建模
 
-### 1、数据
+> 在 MIBC 围术期场景中，如何把 ctDNA 动态监测、WSI 病理图像、临床信息和文本报告融合起来，构建一个既能预测新辅助疗效，又能预测术后复发风险的可解释模型？
 
-## 二、 目前读的文献如何支撑本项目
+真实临床数据里，ctDNA 是按时间点采样的纵向信号，不同患者也可能缺少某些时间点或模态。因此，融合模型需要显式加入时间点 $t$ 和缺失指示 $\mathrm{mask}$。
+### 1. 基本建模
+$$
+h_{\mathrm{ctDNA}} = f_{\mathrm{ctDNA}}(x_{\mathrm{ctDNA}}, t, \mathrm{mask}), \quad
+h_{\mathrm{WSI}} = f_{\mathrm{WSI}}(x_{\mathrm{WSI}}), \quad
+h_{\mathrm{clinical}} = f_{\mathrm{clinical}}(x_{\mathrm{clinical}}), \quad
+h_{\mathrm{text}} = f_{\mathrm{text}}(x_{\mathrm{text}})
+$$
 
+然后融合：
+
+$$
+h_{\mathrm{fusion}} =
+\mathrm{Fusion}\left(
+h_{\mathrm{ctDNA}},
+h_{\mathrm{WSI}},
+h_{\mathrm{clinical}},
+h_{\mathrm{text}},
+\mathrm{mask}
+\right)
+$$
+
+最后拆成两个主要任务输出：
+
+$$
+\hat{y}_{\mathrm{response}} = g_1(h_{\mathrm{fusion}})
+$$
+
+$$
+\hat{r}_{\mathrm{recurrence}} = g_2(h_{\mathrm{fusion}})
+$$
+
+这里：
+
+- $f_{\mathrm{ctDNA}}$：ctDNA 编码器，用于处理纵向 ctDNA 信号、时间点 $t$ 和缺失指示 $\mathrm{mask}$；
+- $f_{\mathrm{WSI}}$：病理图像编码器；
+- $f_{\mathrm{clinical}}$：临床表格编码器；
+- $f_{\mathrm{text}}$：文本编码器；
+- $\mathrm{Fusion}$：多模态融合模块，根据 $\mathrm{mask}$ 判断哪些时间点或模态可用；
+- $\hat{y}_{\mathrm{response}}$：新辅助疗效预测输出，例如 pCR、MPR、ypT 降期；
+- $\hat{r}_{\mathrm{recurrence}}$：复发风险预测输出，例如 12 个月 RFS、24 个月 RFS、MRD 高风险；
+- $\mathrm{mask}$：缺失指示，用来告诉模型哪些时间点或模态缺失。
+
+### 2. 原始数据转换
+
+> **每种原始数据先变成模型能读懂的 numerical representation（数值表示）或 embedding（嵌入向量）。**
+- ctDNA 阳性/阴性：直接是 0/10/10/1；
+- VAF：直接是连续变量；
+- 多时间点 ctDNA：可以变成“是否清除、下降斜率、最低值、术后是否反弹”；
+- WSI：不能直接整张图输入，要切成 patches，再用 MIL 聚合成 slide embedding；
+- CT/MRI：可以用 radiomics 或 3D CNN 提取影像 embedding；
+- 文本报告：可以用 BERT/LLM 变成 text embedding；
+- 临床表格：可以标准化后输入 GBDT/MLP/TabTransformer。
+
+> 参考文献
 
 1. **动态液体活检怎么建模**：参考 ZL008。
 
@@ -303,9 +343,73 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 
 5. **AI 在膀胱癌图像任务中是否已经有基础**：参考 Wu 2022、Shen 2022。
 
- 
+###  第一步：单模态模型。
+先分别做 ctDNA 模型、甲基化模型、病理 AI 模型、临床模型。这样能知道每种数据自己有没有预测价值。
 
-## 11. 我还没搞清楚、后续需要继续查的问题
+> 参考文献
+
+### 第二步：双模态模型。
+
+|融合方式|临床问题|
+|---|---|
+|ctDNA + 临床|ctDNA 是否比传统临床变量更有价值|
+|WSI + 临床|AI 病理是否补充临床判断|
+|ctDNA + WSI|分子残留信号和组织形态是否互补|
+|ctDNA + 甲基化|突变检测和甲基化检测谁更敏感，是否互补|
+
+> 参考文献
+
+
+**第三步：多模态融合模型。**  
+
+> 多模态融合的不同层次，这个是不是可以加一列，参考文献，是什么融合？
+
+| 融合方式                | 做法                   | 优点                 | 缺点          |
+| ------------------- | -------------------- | ------------------ | ----------- |
+| Early fusion        | 原始特征拼接后一起训练          | 简单                 | 容易受尺度、缺失值影响 |
+| Late fusion         | 各模态先独立预测，再融合预测分数     | 稳定、解释性强            | 模态间交互少      |
+| Intermediate fusion | 各模态先变成 embedding，再融合 | 最常用，兼顾性能和灵活性       | 需要设计融合模块    |
+| Attention fusion    | 让模型自动学习哪个模态更重要       | 适合多模态异质数据          | 样本量小容易过拟合   |
+| Cross-attention     | 一个模态去“查询”另一个模态的信息    | 适合图-文、ctDNA-图像动态融合 | 训练复杂，样本要求更高 |
+
+
+#### 小样本数据的不同模态的推荐模型及多模态融合
+|阶段|推荐模型|参考文献|
+|---|---|---|
+|表格型数据|logistic regression、Cox、LASSO、XGBoost、LightGBM||
+|WSI|预训练 CNN/ViT 提特征 + MIL||
+|动态ctDNA|手工动态特征 + Cox/XGBoost||
+|文本|先结构化抽取，先不用LLM||
+|多模态|late fusion 或 intermediate fusion||
+|后续探索|attention fusion / cross-attention / Transformer||
+
+**不是“有一种数据就必须配一个深度学习模型”。**  
+有些数据用传统模型反而更合适，比如年龄、分期、ctDNA 阳性、VAF、甲基化 score，这些表格型变量用 Cox、logistic regression、XGBoost 往往已经很强。
+
+真正需要深度学习的主要是：
+
+- WSI 病理大图像；
+- CT/MRI 影像；
+- 膀胱镜图像；
+- 非结构化文本（自然语言）
+- 多时间点复杂动态数据。
+
+
+#### 一些研究内容？
+1. **纵向 ctDNA 建模**：ctDNA 是本项目中最强的时间连续模态，关键问题是如何处理 T0–T4 的稀疏、不等间隔、缺失和噪声，并将甲基化 score、VAF、清除和反弹转化为可解释的风险轨迹？
+2. **WSI-MIL 表征学习**：WSI 提供组织空间结构，但监督信号弱。如何从 patch-level feature 中学习与 pCR、MPR、MRD 或 RFS 相关的 patient-level representation。
+3. **节点自适应多模态融合**：是否可以模型需要根据节点自动选择可用模态，避免要求所有模态齐全？每个临床节点可用模态不同，T0 可能有 ctDNA、活检 WSI、影像和临床信息，T3 可能主要有术后 ctDNA、手术病理和临床信息。
+4. 每个模态提供什么互补信息？每个模态在哪个治疗阶段最有用？如果某个时间点缺失 WSI、影像或 ctDNA，模型如何处理缺失模态？
+5. **多任务建模**：关于模型输出的任务定义，疗效预测、MRD 判断与复发风险三者之间存在连续的因果关系，
+
+> 治疗方案 → 疗效响应（近端结局） → MRD 状态（中间生物标志物） → 复发风险（远端结局）
+
+是否有必要设置多个输出头分别建模？模型最终的输出定位应聚焦于疗效预测、复发风险预测，还是面向更综合的治疗决策支持？抑或针对不同任务分别构建独立模型？
+6. **低成本检测策略优化**：是否可以写成一个优化问题来刻画在成本受限条件下找到最有信息量的时间点和甲基化位点组合，最小化ctDNA甲基化成本？
+
+
+
+## 一些问题
 
 ### 基础医学问题
 
@@ -316,11 +420,10 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 
 ### 数据问题
 
-1. 每个患者是否所有 T0–T4 时间点都完整？
-2. 缺失时间点如何处理？
-3. ctDNA 是连续值、二值标签，还是多维突变/甲基化特征？
-4. 甲基化 score 的计算方式是什么？
-5. WSI 是治疗前 TURBT 切片，还是术后切除标本，或二者都有？
+1. 每个患者是否所有 T0–T4 时间点都完整?缺失时间点如何处理？
+2. ctDNA 是连续值、二值标签，还是多维突变/甲基化特征？
+3. 甲基化 score 的计算方式是什么？
+4. WSI 是治疗前 TURBT 切片，还是术后切除标本，或二者都有？
 
 ### 模型问题
 
@@ -338,133 +441,5 @@ $$\text{原始数据→对应模态编码器 encoder→embedding→多模态融
 4. 成本优化的目标是减少检测次数，还是减少无效治疗，还是两者都要？
 
 ---
-
-2.4 多模态建模
-
-> 在 MIBC 围术期场景中，如何把 ctDNA 动态监测、WSI 病理图像、临床信息和文本报告融合起来，构建一个既能预测新辅助疗效，又能预测术后复发风险的可解释模型？
-
-
-$$
-h_{\mathrm{ctDNA}} = f_{\mathrm{ctDNA}}(x_{\mathrm{ctDNA}}), \quad
-h_{\mathrm{WSI}} = f_{\mathrm{WSI}}(x_{\mathrm{WSI}}), \quad
-h_{\mathrm{clinical}} = f_{\mathrm{clinical}}(x_{\mathrm{clinical}}), \quad
-h_{\mathrm{text}} = f_{\mathrm{text}}(x_{\mathrm{text}})
-$$
-
-然后融合：
-
-$$
-h_{\mathrm{fusion}} =
-\mathrm{Fusion}\left(
-h_{\mathrm{ctDNA}},
-h_{\mathrm{WSI}},
-h_{\mathrm{clinical}},
-h_{\mathrm{text}}
-\right)
-$$
-
-最后预测：
-
-$$
-\hat{y} = g(h_{\mathrm{fusion}})
-$$
-
-这里：
-
-- fctDNAf_{ctDNA}fctDNA​：ctDNA 编码器；
-- fWSIf_{WSI}fWSI​：病理图像编码器；
-- fclinicalf_{clinical}fclinical​：临床表格编码器；
-- ftextf_{text}ftext​：文本编码器；
-- FusionFusionFusion：多模态融合模块；
-- ggg：最终预测头，比如预测 pCR、MPR、RFS、复发风险。
-
-
-
-**第一步：单模态模型。**  
-先分别做 ctDNA 模型、甲基化模型、病理 AI 模型、临床模型。这样能知道每种数据自己有没有预测价值。
-
-**第二步：双模态模型。**  
-比如：
-
-|融合方式|临床问题|
-|---|---|
-|ctDNA + 临床|ctDNA 是否比传统临床变量更有价值|
-|WSI + 临床|AI 病理是否补充临床判断|
-|ctDNA + WSI|分子残留信号和组织形态是否互补|
-|ctDNA + 甲基化|突变检测和甲基化检测谁更敏感，是否互补|
-
-**第三步：全模态融合模型。**  
-把 ctDNA 动态、甲基化、WSI、影像/膀胱镜、文本报告、临床表格一起融合，预测：
-
-- pCR（pathological complete response，病理完全缓解）；
-- MPR（major pathological response，主要病理缓解）；
-- ypT 降期；
-- RFS（recurrence-free survival，无复发生存）；
-- OS（overall survival，总生存）；
-- 术后 MRD 阳性和复发风险。
-
-多模态融合也有不同层次：
-
-| 融合方式                | 做法                   | 优点                 | 缺点          |
-| ------------------- | -------------------- | ------------------ | ----------- |
-| Early fusion        | 原始特征拼接后一起训练          | 简单                 | 容易受尺度、缺失值影响 |
-| Late fusion         | 各模态先独立预测，再融合预测分数     | 稳定、解释性强            | 模态间交互少      |
-| Intermediate fusion | 各模态先变成 embedding，再融合 | 最常用，兼顾性能和灵活性       | 需要设计融合模块    |
-| Attention fusion    | 让模型自动学习哪个模态更重要       | 适合多模态异质数据          | 样本量小容易过拟合   |
-| Cross-attention     | 一个模态去“查询”另一个模态的信息    | 适合图-文、ctDNA-图像动态融合 | 训练复杂，样本要求更高 |
-
-你这张表里最重要的是这句话：**每种原始数据先变成模型能读懂的 numerical representation（数值表示）或 embedding（嵌入向量）。**
-
-例如：
-
-- ctDNA 阳性/阴性：直接是 0/10/10/1；
-- VAF：直接是连续变量；
-- 多时间点 ctDNA：可以变成“是否清除、下降斜率、最低值、术后是否反弹”；
-- WSI：不能直接整张图输入，要切成 patches，再用 MIL 聚合成 slide embedding；
-- CT/MRI：可以用 radiomics 或 3D CNN 提取影像 embedding；
-- 文本报告：可以用 BERT/LLM 变成 text embedding；
-- 临床表格：可以标准化后输入 GBDT/MLP/TabTransformer。
-
-但你们项目样本量预计大概 200 例左右，所以建议优先这样做：
-
-|阶段|推荐模型|原因|
-|---|---|---|
-|第一版|logistic regression、Cox、LASSO、XGBoost、LightGBM|稳、可解释、不容易过拟合|
-|WSI 第一版|预训练 CNN/ViT 提特征 + MIL|不需要从零训练大模型|
-|ctDNA 动态第一版|手工动态特征 + Cox/XGBoost|临床解释性强|
-|文本第一版|先结构化抽取，不急着上 LLM|小样本更稳|
-|多模态第一版|late fusion 或 intermediate fusion|比 cross-attention 更安全|
-|后续探索|attention fusion / cross-attention / Transformer|等数据量和 baseline 稳定后再做|
-
-最关键别搞错：**不是“有一种数据就必须配一个深度学习模型”。**  
-有些数据用传统模型反而更合适，比如年龄、分期、ctDNA 阳性、VAF、甲基化 score，这些表格型变量用 Cox、logistic regression、XGBoost 往往已经很强。
-
-真正需要深度学习的主要是：
-
-- WSI 病理大图像；
-- CT/MRI 影像；
-- 膀胱镜图像；
-- 非结构化文本；
-- 多时间点复杂动态数据。
-
-一句话总结：**对，不同模态要用不同 encoder 处理；但最终目标是把 ctDNA、病理图像、影像、文本和临床表格统一成 embedding，再做可解释的多模态融合预测。**
-
-#### 一些问题？
-1. **纵向 ctDNA 建模**：ctDNA 是本项目中最强的时间连续模态，关键问题是如何处理 T0–T4 的稀疏、不等间隔、缺失和噪声，并将甲基化 score、VAF、清除和反弹转化为可解释的风险轨迹。
-2. **WSI-MIL 表征学习**：WSI 提供组织空间结构，但监督信号弱。可深挖的问题是如何从 patch-level feature 中学习与 pCR、MPR、MRD 或 RFS 相关的 patient-level representation。
-3. **节点自适应多模态融合**：每个临床节点可用模态不同，T0 可能有 ctDNA、活检 WSI、影像和临床信息，T3 可能主要有术后 ctDNA、手术病理和临床信息。模型需要根据节点自动选择可用模态，避免要求所有模态齐全。
-4. **多任务结局建模**：疗效预测、MRD 判断和复发风险存在连续关系。可考虑联合建模 pCR / MPR 分类、MRD 风险分层和 RFS / DFS / OS 生存分析，让短期疗效信号服务长期复发风险判断。
-5. **低成本检测策略优化**：如果项目重点强调 ctDNA 甲基化，技术贡献还可以落在 panel 特征筛选和采样频率优化上，即在成本受限条件下找到最有信息量的时间点和甲基化位点组合。
-6. 后续建模需要继续回答四个问题：
-
-7. 每个模态提供什么互补信息？
-8. 每个模态在哪个治疗阶段最有用？
-9. 如果某个时间点缺失 WSI、影像或 ctDNA，模型如何处理缺失模态？z018已经解决了
-10. 模型最终输出应定位为疗效预测、复发风险预测，还是治疗决策支持？还是说多个模型？ z018咋么干的？
-
-
-
-
-
 
 
