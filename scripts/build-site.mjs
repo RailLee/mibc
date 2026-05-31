@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const rootDir = process.cwd();
-const noteFile = path.join(rootDir, "notes", "MIBC 围术期 ctDNA 动态监测联合 AI 病理项目笔记.md");
-const notesDir = path.dirname(noteFile);
+const noteFile = path.join(rootDir, "笔记", "MIBC 围术期 ctDNA 动态监测联合 AI 病理项目笔记.md");
+const noteDir = path.dirname(noteFile);
 const outDir = path.join(rootDir, "public");
 const outAssetsDir = path.join(outDir, "assets");
 
@@ -61,7 +61,7 @@ function resolveAsset(target) {
   }
 
   const candidates = [
-    path.join(notesDir, cleanTarget),
+    path.join(noteDir, cleanTarget),
     path.join(rootDir, "笔记", cleanTarget),
     path.join("/Users/liluxuan/Documents/obsidian", cleanTarget),
   ];

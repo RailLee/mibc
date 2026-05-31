@@ -3,8 +3,17 @@
 !README.md
 !.github/
 !.github/**
-!notes/
-!notes/**
+!笔记/
+!笔记/MIBC 围术期 ctDNA 动态监测联合 AI 病理项目笔记.md
+!笔记/ChatGPT Image May 30, 2026, 05_12_40 PM 1.png
+!笔记/ChatGPT Image May 30, 2026, 10_35_13 PM (1).png
+!笔记/ChatGPT Image May 30, 2026, 10_35_15 PM (2).png
+!笔记/ChatGPT Image May 30, 2026, 10_35_16 PM (3).png
+!笔记/ChatGPT Image May 30, 2026, 11_25_47 PM.png
+!笔记/MIBC_assets/
+!笔记/MIBC_assets/ctDNA_dual_source_and_treatment_dynamics.svg
+!笔记/MIBC_assets/modality_timepoint_matrix.svg
+!笔记/MIBC_assets/multimodal_pipeline_innovation_map.svg
 !public/
 !public/**
 !scripts/
